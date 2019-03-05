@@ -2,37 +2,34 @@ body {
   font-family: Arial, Helvetica, "Times New Roman", Times, sans-serif;
 }
 
-@media only screen and (max-width: 601px) {
-  #hamburger-icon {
-    display: none;
+.nav-links {
+  text-decoration: none;
+}
+
+@media only screen and (min-width: 601px) {
+  body {
+    width: 960px;
+    margin: 0 auto;
+  }
+
+  .nav-links {
+    margin-right: 25px;
+    margin-left: 25px;
   }
 }
 
 
-@media only screen and (min-width: 600px) {
-  #hamburger-icon {
-    float: right;
+@media only screen and (max-width: 600px) {
+  #main-navigation {
+    display: flex;
+    justify-content: space-between;
   }
-  * {
-    margin: 0;
+
+  .nav-links {
+    padding: 17px;
   }
-  html, body {
-    height: 100%;
-    background-color: azure;
-  }
-  .page-wrap {
-    min-height: 100%;
-    /* equal to footer height */
-    margin-bottom: -142px;
-  }
-  .page-wrap:after {
-    content: "";
-    display: block;
-  }
-  .site-footer, .page-wrap:after {
-    height: 142px;
-  }
-  .site-footer {
-    background: orange;
+
+  .nav-divider {
+    display: none;
   }
 }
