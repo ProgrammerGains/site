@@ -1,71 +1,96 @@
-document.getElementById('reviews-page-link').addEventListener('click', () => {
-  console.log('clicked')
-  onNavItemClick('reviews');
-});
-
-let redirect404 = () => {
-  var segmentCount = 0;
-  var location = window.location;
-  location.replace(
-      location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') +
-      location.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
-      location.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-      (location.search ? '&q=' + location.search.slice(1).replace(/&/g, '~and~') : '') +
-      location.hash
-  );
+let getPost = async (id) => {
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+  try {
+    const response = await fetch(`https://5bb634f6695f8d001496c082.mockapi.io/api/posts/` + id, options)
+    const json = await response.json();
+    // console.log(json)
+    return json
+  } catch (err) {
+    console.log('Error getting documents', err)
+  }
 }
 
-let recieveRedirect = () => {
-  (function(location) {
-    if (location.search) {
-      console.log(location);
-      var q = {};
-      location.search.slice(1).split('&').forEach(function(v) {
-        var a = v.split('=');
-        q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
-      });
-      if (q.p !== undefined) {
-        window.history.replaceState(null, null,
-            location.pathname.slice(0, -1) + (q.p || '') +
-            (q.q ? ('?' + q.q) : '') +
-            location.hash
-        );
-      }
-    }
-  }(window.location));
-};
+let PostShow = {
+  render : async () => {
+    let request = Utils.parseRequestURL()
+    let post = await getPost(request.id)
 
-recieveRedirect();
-
-let contentDiv = document.getElementById('content');
-
-let homepage = `
-<h2> Hi, I am the homepage :)</h2>
-`
-
-let reviewsPage = `
-<h2> asdfasdfasdfasdfasdcxfasdfasdfasdf</h2>
-`
+    return /*html*/`
+            <section class="section">
+                <h1> Post Id : ${post.id}</h1>
+                <p> Post Title : ${post.title} </p>
+                <p> Post Content : ${post.content} </p>
+                <p> Post Author : ${post.name} </p>
+            </section>
+        `
+  }
+  , after_render: async () => {
+  }
+}
 
 let routes = {
-  '/': homepage,
-  '/reviews': reviewsPage
+  '/': null,
+  '/videos': PostShow
 };
 
-window.onpopstate = () => {
-  contentDiv.innerHTML = routes[window.location.pathname];
-}
+const router = async () => {
+  let request = Utils.parseRequestURL();
+  console.log(request);
 
-let onNavItemClick = (pathName) => {
-  console.log(pathName);
-  console.log(window.location.pathname);
-  console.log(window.location.origin);
-  console.log(window.location.origin + pathName)
-  console.log(window.location.origin + '/#/' + pathName)
-  window.history.pushState({}, pathName, window.location.origin + '/#/' + pathName);
-  contentDiv.innerHTML = routes[pathName];
-}
+  let parsedURL =
+      (request.resource ? '/' + request.resource : '/') +
+      (request.id ? '/:id' : '') +
+      (request.verb ? '/' + request.verb : '');
 
-contentDiv.innerHTML = routes[window.location.pathname];
+  let page = routes[parsedURL];
+  console.log(routes[parsedURL]);
+
+  getFromPHP();
+
+  const content = document.getElementById('content-container');
+};
+
+window.addEventListener('hashchange', router);
+window.addEventListener('load', router);
+
+const getFromPHP = () => {
+  fetch('../php/posts.php', {
+    method: 'get',
+    // may be some code of fetching comes here
+  }).then(function(response) {
+    if (response.status >= 200 && response.status < 300) {
+      return response.text()
+    }
+    throw new Error(response.statusText)
+  })
+  .then(function(response) {
+    console.log(response);
+  })
+};
 
 
+const Utils = {
+  parseRequestURL: () => {
+    let url = location.hash.slice(1).toLowerCase() || '/';
+    let r = url.split("/");
+    let request = {
+      resource: null,
+      id: null,
+      verb: null
+    };
+
+    request.resource = r[1];
+    request.id = r[2];
+    request.verb = r[3];
+
+    return request
+  },
+  sleep: (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+};
